@@ -13,7 +13,8 @@ import { INGEST_JOB_OPTIONS, JOBS, QUEUES, redisConnection, type IngestJobData }
 const env = loadEnv(workerEnvSchema);
 const connection = redisConnection(env.REDIS_URL);
 const SWEEP_EVERY_MS = 15 * 60 * 1000;
-const STALE_QUEUED_MS = 2 * 60 * 1000;
+const REQUEUE_EVERY_MS = 60 * 1000;
+const STALE_QUEUED_MS = 30 * 1000;
 
 const ingestQueue = new Queue<IngestJobData>(QUEUES.ingest, { connection });
 const maintenanceQueue = new Queue(QUEUES.maintenance, { connection });
@@ -57,20 +58,25 @@ async function requeueStale() {
 
 const maintenanceWorker = new Worker(
   QUEUES.maintenance,
-  async () => {
-    const sweep = await runArchiveSweep();
-    const requeued = await requeueStale();
-    return { ...sweep, requeued };
+  async (job) => {
+    if (job.name === JOBS.requeueStale) return { requeued: await requeueStale() };
+    return runArchiveSweep();
   },
   { connection, concurrency: 1 },
 );
 
-maintenanceWorker.on("completed", (_job, result) => console.log(`[sweep] ${JSON.stringify(result)}`));
-maintenanceWorker.on("failed", (_job, err) => console.error(`[sweep] failed: ${err.message}`));
+maintenanceWorker.on("completed", (job, result) => {
+  // Stay quiet when the minutely requeue finds nothing.
+  if (job.name === JOBS.requeueStale && (result as { requeued: number }).requeued === 0) return;
+  console.log(`[${job.name}] ${JSON.stringify(result)}`);
+});
+maintenanceWorker.on("failed", (job, err) => console.error(`[${job?.name ?? "maintenance"}] failed: ${err.message}`));
 
 await maintenanceQueue.upsertJobScheduler("archive-sweep", { every: SWEEP_EVERY_MS }, { name: JOBS.archiveSweep });
-// Run once at boot too, so deadlines that passed while the worker was down are handled.
+await maintenanceQueue.upsertJobScheduler("requeue-stale", { every: REQUEUE_EVERY_MS }, { name: JOBS.requeueStale, opts: { removeOnComplete: true, removeOnFail: 100 } });
+// Run both once at boot, so anything missed while the worker was down is handled.
 await maintenanceQueue.add(JOBS.archiveSweep, {}, { removeOnComplete: true, removeOnFail: 100 });
+await maintenanceQueue.add(JOBS.requeueStale, {}, { removeOnComplete: true, removeOnFail: 100 });
 
 console.log("[worker] ready");
 

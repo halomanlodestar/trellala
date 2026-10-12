@@ -8,15 +8,14 @@ export const QUEUES = {
 export const JOBS = {
   ingestEvent: "ingest-event",
   archiveSweep: "archive-sweep",
+  requeueStale: "requeue-stale",
 } as const;
 
 export type IngestJobData = { eventId: string };
 
-export function redisConnection(url = process.env.REDIS_URL, opts: { failFast?: boolean } = {}): ConnectionOptions {
+export function redisConnection(url = process.env.REDIS_URL): ConnectionOptions {
   if (!url) throw new Error("REDIS_URL is not set");
-  return opts.failFast
-    ? { url, maxRetriesPerRequest: 1, enableOfflineQueue: false }
-    : { url, maxRetriesPerRequest: null };
+  return { url, maxRetriesPerRequest: null };
 }
 
 export const INGEST_JOB_OPTIONS = {
@@ -28,12 +27,14 @@ export const INGEST_JOB_OPTIONS = {
 
 const g = globalThis as unknown as { __ingestQueue?: Queue<IngestJobData> };
 
-/** Producer used by the web app. Fails fast if Redis is down (events stay QUEUED and the sweep re-enqueues them). */
+/**
+ * Producer used by the web app. Commands made before the connection is ready are buffered;
+ * enqueueIngestEvents bounds the wait, and the worker re-enqueues anything left QUEUED.
+ */
 export function getIngestQueue(): Queue<IngestJobData> {
   if (!g.__ingestQueue) {
     const queue = new Queue<IngestJobData>(QUEUES.ingest, {
-      connection: redisConnection(undefined, { failFast: true }),
-      skipWaitingForReady: true,
+      connection: redisConnection(),
     });
     let lastLog = 0;
     queue.on("error", (e) => {

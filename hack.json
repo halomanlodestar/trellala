@@ -1,0 +1,37 @@
+{
+  "hackathons": [
+    {
+      "externalId": "test-1",
+      "sourceUrl": "https://devfolio.co/test-1",
+      "name": "Test Hack",
+      "type": "BUILDATHON",
+      "mode": "ONLINE",
+      "teamSizeMin": 2,
+      "teamSizeMax": 4,
+      "tags": ["ai"],
+      "estimatedUsd": 5000,
+      "milestones": [
+        {
+          "kind": "REGISTRATION",
+          "title": "Registration",
+          "endsAt": "2026-11-01T23:59:00+05:30"
+        },
+        {
+          "kind": "FINAL_SUBMISSION",
+          "title": "Final submission",
+          "endsAt": "2026-11-20T18:00:00+05:30",
+          "action": "Repo + demo video"
+        }
+      ],
+      "prizes": [
+        {
+          "title": "1st place",
+          "kind": "CASH",
+          "amount": 250000,
+          "currency": "INR",
+          "estimatedUsd": 3000
+        }
+      ]
+    }
+  ]
+}
