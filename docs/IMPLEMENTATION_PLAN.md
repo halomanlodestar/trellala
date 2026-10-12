@@ -2,7 +2,7 @@
 
 Phased build plan for [ARCHITECTURE.md](ARCHITECTURE.md). Each phase ends with something usable and testable. Phases 0–4 give an MVP the team can use day to day by entering hackathons by hand. Phases 5–6 add the worker and ingestion, which is what Trello data migration needs.
 
-**Testing throughout:** `bun test` covers `packages/core` against a real Postgres (docker compose). Pure logic (diffing, ranking, archive rules) gets table-driven unit tests. UI is checked by hand at the end of each phase.
+**Testing throughout:** `bun test` covers `packages/core` against a real Postgres (local install or a dev database; no Docker). Pure logic (diffing, ranking, archive rules) gets table-driven unit tests. UI is checked by hand at the end of each phase.
 
 ---
 
@@ -15,7 +15,7 @@ Phased build plan for [ARCHITECTURE.md](ARCHITECTURE.md). Each phase ends with s
   - Remove `packageManager`, `ignoreScripts` and `trustedDependencies` from `apps/web/package.json`; the root owns them.
   - Root scripts: `dev`, `build`, `lint`, `typecheck`, `test`, `db:migrate`, `db:studio`.
 - **`packages/config`:** a shared `tsconfig.base.json` that each package extends.
-- **`docker-compose.yml`:** Postgres 17 and Redis 7 for local development.
+- **Local services:** your own Postgres and Redis (no Docker), configured via `.env`.
 - **`packages/db`**
   - Prisma 7, `prisma.config.ts`, and the schema that already exists.
   - Export a client singleton.
@@ -28,7 +28,7 @@ Phased build plan for [ARCHITECTURE.md](ARCHITECTURE.md). Each phase ends with s
   - A zod env loader.
 - **`.env.example`** listing every variable.
 
-**Done when:** `docker compose up`, `bun db:migrate`, `bun dev` and `bun test` all work from the root.
+**Done when:** `bun db:migrate`, `bun dev` and `bun test` all work from the root.
 
 ---
 
@@ -157,13 +157,13 @@ Phased build plan for [ARCHITECTURE.md](ARCHITECTURE.md). Each phase ends with s
 
 ## Phase 8 — Deploy to AWS
 
-- **Dockerfiles** for `web` (Next standalone output) and `worker` (Bun).
-- **Infrastructure:**
-  - One EC2 instance running Docker Compose with `web`, `worker`, `redis` and Caddy (TLS).
+- **Infrastructure (no Docker):**
+  - One EC2 instance with Bun, Redis, and nginx or Caddy (TLS).
+  - `web` and `worker` as systemd services (or pm2).
   - RDS Postgres.
   - Secrets in SSM Parameter Store.
   - The Google OAuth redirect URLs for production.
-- **CI** (GitHub Actions): lint, typecheck and test; build and push the images to ECR; SSH or SSM into the instance; pull the images; run `prisma migrate deploy`; `docker compose up -d`.
+- **CI** (GitHub Actions): lint, typecheck and test; SSH or SSM into the instance; `git pull`, `bun install`, `bun run build`, `bun db:deploy`; restart the services.
 - **Backups:** RDS automated backups enabled.
 
 ---
@@ -177,4 +177,4 @@ MCP server over `packages/core` · notifications and digests · Discord bot · s
 ## Decisions to confirm before Phase 1
 
 1. **Date library:** `date-fns` with `@date-fns/tz`.
-2. **Postgres hosting:** RDS (recommended) or in Docker Compose on the EC2 instance.
+2. **Postgres hosting:** RDS (recommended) or installed on the EC2 instance.

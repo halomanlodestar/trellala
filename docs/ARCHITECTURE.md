@@ -25,7 +25,7 @@ Data model: [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.pr
 | Auth | BetterAuth, Google sign-in, open signup |
 | Queue | BullMQ on Redis, processed by the separate `apps/worker` process |
 | Validation | zod (shared between API, worker and forms) |
-| Hosting | AWS EC2 (web + worker via Docker Compose), RDS Postgres, Redis |
+| Hosting | AWS EC2 (web + worker as systemd services, no Docker), RDS Postgres, Redis |
 
 Codebase rules: [CONVENTIONS.md](CONVENTIONS.md).
 
@@ -208,13 +208,13 @@ Global layout:
 
 ## 9. Deployment (AWS)
 
-- **One EC2 instance running Docker Compose:**
-  - `web`: `next start`, behind Caddy or nginx for TLS
+- **One EC2 instance, no Docker.** Processes are managed by systemd (or pm2):
+  - `web`: `next start`, behind nginx or Caddy for TLS
   - `worker`: a long-running Bun process
-  - `redis`: Redis 7 with AOF persistence
-- **Postgres on RDS,** for managed backups. It could also run in Compose to save cost, but then you handle backups yourself.
+  - Redis 7 (installed on the box with AOF persistence, or ElastiCache)
+- **Postgres on RDS,** for managed backups.
 - **Why not one process?** BullMQ workers are kept out of the Next.js process. Next can run several workers and reloads on change in dev, either of which would duplicate jobs. The web app only *enqueues* jobs.
-- **Migrations:** `prisma migrate deploy` runs as a one-off container before `web` and `worker` restart.
+- **Migrations:** `bun db:deploy` runs before `web` and `worker` restart.
 - **Secrets** in SSM Parameter Store or Secrets Manager, loaded into `.env` at deploy: `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID/SECRET`.
 - **Hand-written migration SQL** (Prisma can't express these):
   - Partial unique indexes on `Milestone` (event key; team key)
