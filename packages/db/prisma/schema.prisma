@@ -1,0 +1,494 @@
+// Trellala — Prisma schema (PostgreSQL)
+//
+// Conventions
+// - All DateTime values are stored in UTC; the UI renders them in IST.
+// - "Source" strings identify who last set a field, for clash detection:
+//     "user:<userId>"      a human edit in the web app
+//     "ingest:<source>"    an ingestor (source label comes from its ApiKey)
+// - Two partial unique indexes can't be expressed in Prisma and must be added
+//   by hand in the first migration's SQL (see the notes on Milestone and Conflict).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Connection URL lives in prisma.config.ts (Prisma 7).
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth (BetterAuth, Google sign-in). Field names follow BetterAuth's Prisma
+// adapter; regenerate with `npx @better-auth/cli generate` if it drifts.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // App fields
+  skills String[] @default([])
+
+  sessions Session[]
+  accounts Account[]
+
+  teamMemberships       TeamMember[]
+  hackathonsCreated     Hackathon[]     @relation("HackathonCreatedBy")
+  hackathonsArchived    Hackathon[]     @relation("HackathonArchivedBy")
+  teamsCreated          Team[]          @relation("TeamCreatedBy")
+  milestonesCreated     Milestone[]     @relation("MilestoneCreatedBy")
+  teamMilestonesUpdated TeamMilestone[] @relation("TeamMilestoneUpdatedBy")
+  apiKeysCreated        ApiKey[]
+  conflictsResolved     Conflict[]
+  activity              ActivityLog[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hackathons
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum HackathonType {
+  BUILDATHON
+  IDEATHON
+  CTF
+  DSA
+  GRANT
+  BOUNTY
+  OTHER
+}
+
+enum HackathonMode {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
+
+// Coarse pipeline stage. Per-team progress lives on Team.status.
+enum HackathonStage {
+  DISCOVERED
+  EVALUATING
+  COMMITTED
+}
+
+enum ArchiveReason {
+  // manual
+  SKILL_MISMATCH
+  LOW_PRIZE
+  NO_TIME
+  NOT_INTERESTED
+  OTHER
+  // automatic (set by the archive sweep, archivedById = null)
+  CONCLUDED          // every event milestone has ended
+  ALL_TEAMS_OUT      // every team is MISSED / ELIMINATED / WITHDRAWN
+  NO_TEAM_REGISTERED // registration closed with zero teams
+}
+
+model Hackathon {
+  id            String         @id @default(cuid())
+  name          String
+  description   String?        @db.Text
+  type          HackathonType
+  mode          HackathonMode
+  location      String?
+  stage         HackathonStage @default(DISCOVERED)
+
+  // Provenance / ingest identity
+  source        String? // e.g. "devfolio"
+  externalId    String? // the source's own id
+  sourceUrl     String?
+  normalizedUrl String? // lowercased, no query/trailing slash; fallback match key
+
+  // Requirements
+  teamSizeMin Int?
+  teamSizeMax Int?
+  eligibility String? @db.Text
+
+  // Prioritization
+  estimatedUsd   Decimal? @db.Decimal(14, 2) // ingested; used for sorting
+  effortEstimate Int? // person-hours, set by hand
+  fitScore       Int? // 1–5, set by hand
+  tags           String[] @default([])
+  notes          String?  @db.Text
+
+  // Field-level provenance: { "<fieldPath>": "<source>" }
+  // e.g. { "name": "ingest:devfolio", "milestones.final_submission.endsAt": "user:abc" }
+  fieldSources Json @default("{}")
+
+  // Archival (null = active)
+  archivedAt    DateTime?
+  archiveReason ArchiveReason?
+  archiveNote   String?
+  archivedById  String?
+  archivedBy    User?          @relation("HackathonArchivedBy", fields: [archivedById], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?    @relation("HackathonCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  milestones   Milestone[]
+  prizes       Prize[]
+  teams        Team[]
+  teamMembers  TeamMember[]
+  ingestEvents IngestEvent[]
+  conflicts    Conflict[]
+  activity     ActivityLog[]
+
+  @@unique([source, externalId])
+  @@index([normalizedUrl])
+  @@index([archivedAt])
+  @@index([tags], type: Gin)
+}
+
+enum PrizeKind {
+  CASH
+  CRYPTO
+  NON_MONETARY
+}
+
+model Prize {
+  id           String    @id @default(cuid())
+  hackathonId  String
+  hackathon    Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  key          String // stable identity within the hackathon, e.g. "1st", "track_ai_1st"
+  title        String
+  kind         PrizeKind
+  amount       Decimal?  @db.Decimal(20, 6) // crypto needs decimals
+  currency     String? // "INR", "USD", "ETH", "USDC", …
+  description  String?   @db.Text
+  estimatedUsd Decimal?  @db.Decimal(14, 2)
+  sortOrder    Int       @default(0)
+
+  wonBy Team[]
+
+  @@unique([hackathonId, key])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Milestones
+// teamId = null  → event milestone (part of the hackathon's official timeline)
+// teamId = set   → team-only internal milestone; never causes a team to be MISSED
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum MilestoneKind {
+  REGISTRATION
+  TEAM_FORMATION
+  IDEA_SUBMISSION
+  SHORTLIST
+  ROUND
+  PROTOTYPE
+  FINAL_SUBMISSION
+  DEMO
+  EVENT_START
+  EVENT_END
+  RESULTS
+  REPORT
+  PAYOUT
+  CUSTOM
+}
+
+model Milestone {
+  id             String        @id @default(cuid())
+  hackathonId    String
+  hackathon      Hackathon     @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  teamId         String?
+  team           Team?         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  key            String // stable identity used for diffing, e.g. "registration", "round_2"
+  kind           MilestoneKind
+  title          String
+  action         String?       @db.Text // what must be done
+  startsAt       DateTime?
+  endsAt         DateTime
+  sourceTimezone String? // as published, e.g. "America/Los_Angeles"
+  requiresAction Boolean       @default(true) // false = informational (e.g. results date)
+  isHardDeadline Boolean       @default(true) // missing it puts the team out
+  sortOrder      Int           @default(0)
+
+  createdById String?
+  createdBy   User?    @relation("MilestoneCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress TeamMilestone[]
+
+  // Partial unique indexes (add in migration SQL):
+  //   CREATE UNIQUE INDEX milestone_event_key ON "Milestone" ("hackathonId", "key") WHERE "teamId" IS NULL;
+  //   CREATE UNIQUE INDEX milestone_team_key  ON "Milestone" ("teamId", "key")      WHERE "teamId" IS NOT NULL;
+  @@index([hackathonId, endsAt])
+  @@index([endsAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Teams — several independent teams can enter the same hackathon
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TeamStatus {
+  ACTIVE
+  SUBMITTED
+  SHORTLISTED
+  // out
+  MISSED     // missed a hard event deadline (set by the sweep)
+  ELIMINATED
+  WITHDRAWN
+  // final
+  WON
+  LOST
+}
+
+model Team {
+  id              String     @id @default(cuid())
+  hackathonId     String
+  hackathon       Hackathon  @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  name            String
+  ideaTitle       String?
+  ideaDescription String?    @db.Text
+  repoUrl         String?
+  demoUrl         String?
+  submissionUrl   String?
+  status          TeamStatus @default(ACTIVE)
+  wonPrizeId      String?
+  wonPrize        Prize?     @relation(fields: [wonPrizeId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?    @relation("TeamCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members    TeamMember[]
+  milestones Milestone[] // team-only milestones
+  progress   TeamMilestone[]
+
+  @@index([hackathonId])
+}
+
+model TeamMember {
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Denormalized so one person can only be on one team per hackathon.
+  // Core must keep it equal to team.hackathonId.
+  hackathonId String
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now())
+
+  @@id([teamId, userId])
+  @@unique([hackathonId, userId])
+  @@index([userId])
+}
+
+enum TeamMilestoneState {
+  TODO
+  DONE
+  SKIPPED
+  MISSED
+}
+
+// A team's progress on a milestone. No row = TODO (rows are created lazily,
+// on first update or when the sweep marks a milestone MISSED).
+model TeamMilestone {
+  id          String             @id @default(cuid())
+  teamId      String
+  team        Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  milestoneId String
+  milestone   Milestone          @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  state       TeamMilestoneState @default(TODO)
+  proofUrl    String?
+  note        String?            @db.Text
+  updatedById String?
+  updatedBy   User?              @relation("TeamMilestoneUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  completedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([teamId, milestoneId])
+  @@index([milestoneId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ingestion
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String // "devfolio daily cron"
+  source      String // attributed source label → "ingest:<source>"
+  prefix      String // first chars, shown in UI
+  hashedKey   String    @unique
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  ingestEvents IngestEvent[]
+  activity     ActivityLog[]
+}
+
+enum IngestStatus {
+  QUEUED
+  PROCESSING
+  APPLIED   // everything applied (or newly created)
+  PARTIAL   // some fields applied, some went to conflicts
+  NO_CHANGE
+  FAILED
+}
+
+// One row per ingested hackathon payload. Written before the BullMQ job is
+// enqueued, so nothing is lost if Redis drops a job.
+model IngestEvent {
+  id          String       @id @default(cuid())
+  apiKeyId    String?
+  apiKey      ApiKey?      @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  source      String
+  externalId  String?
+  sourceUrl   String?
+  payload     Json
+  status      IngestStatus @default(QUEUED)
+  hackathonId String? // matched or created
+  hackathon   Hackathon?   @relation(fields: [hackathonId], references: [id], onDelete: SetNull)
+  // { created: bool, applied: string[], conflicted: string[], unchanged: string[] }
+  result      Json?
+  error       String?      @db.Text
+  attempts    Int          @default(0)
+  createdAt   DateTime     @default(now())
+  processedAt DateTime?
+
+  candidates ConflictCandidate[]
+
+  @@index([status, createdAt])
+  @@index([hackathonId])
+}
+
+enum ConflictStatus {
+  OPEN
+  RESOLVED
+}
+
+// One field of one hackathon on which two or more sources disagree.
+model Conflict {
+  id            String         @id @default(cuid())
+  hackathonId   String
+  hackathon     Hackathon      @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  fieldPath     String // "name", "teamSizeMax", "milestones.final_submission.endsAt", "prizes.1st.amount"
+  status        ConflictStatus @default(OPEN)
+  currentValue  Json? // DB value when the conflict opened
+  currentSource String?
+  resolvedValue Json?
+  resolvedById  String?
+  resolvedBy    User?          @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt    DateTime?
+  note          String?        @db.Text
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  candidates ConflictCandidate[]
+
+  // Partial unique index (add in migration SQL) — one open conflict per field:
+  //   CREATE UNIQUE INDEX conflict_open_field ON "Conflict" ("hackathonId", "fieldPath") WHERE "status" = 'OPEN';
+  @@index([status, createdAt])
+  @@index([hackathonId])
+}
+
+model ConflictCandidate {
+  id            String       @id @default(cuid())
+  conflictId    String
+  conflict      Conflict     @relation(fields: [conflictId], references: [id], onDelete: Cascade)
+  source        String
+  value         Json
+  ingestEventId String?
+  ingestEvent   IngestEvent? @relation(fields: [ingestEventId], references: [id], onDelete: SetNull)
+  receivedAt    DateTime     @default(now())
+
+  // A source re-sending while the conflict is open replaces its own candidate.
+  @@unique([conflictId, source])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Activity log — every mutation writes one row in the same transaction
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ActorType {
+  USER
+  API_KEY
+  SYSTEM // worker: ingest processor, archive sweep
+}
+
+model ActivityLog {
+  id            String     @id @default(cuid())
+  actorType     ActorType
+  actorUserId   String?
+  actorUser     User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorApiKeyId String?
+  actorApiKey   ApiKey?    @relation(fields: [actorApiKeyId], references: [id], onDelete: SetNull)
+  // Dotted verb, list kept in packages/core: "hackathon.archived", "team.member_added",
+  // "milestone.completed", "ingest.applied", "conflict.resolved", …
+  action        String
+  entityType    String // "Hackathon" | "Team" | "Milestone" | "TeamMilestone" | "Prize" | "Conflict" | "IngestEvent" | "ApiKey"
+  entityId      String
+  hackathonId   String?
+  hackathon     Hackathon? @relation(fields: [hackathonId], references: [id], onDelete: SetNull)
+  before        Json?
+  after         Json?
+  note          String?    @db.Text
+  createdAt     DateTime   @default(now())
+
+  @@index([hackathonId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([createdAt])
+}
