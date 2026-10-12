@@ -19,12 +19,15 @@ Data model: [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.pr
 | Concern | Choice |
 |---|---|
 | Language / runtime | TypeScript, Bun workspaces |
-| Web | Next.js (App Router, server components, server actions) |
+| Web + API | Next.js (App Router, server components, server actions, route handlers). No separate backend. |
+| UI | shadcn/ui, TanStack Query, React Hook Form |
 | DB | PostgreSQL + Prisma 7 |
 | Auth | BetterAuth, Google sign-in, open signup |
-| Queue | BullMQ on Redis |
+| Queue | BullMQ on Redis, processed by the separate `apps/worker` process |
 | Validation | zod (shared between API, worker and forms) |
-| Hosting | AWS: ECS Fargate (web, worker), RDS Postgres, ElastiCache Redis, Secrets Manager |
+| Hosting | AWS EC2 (web + worker via Docker Compose), RDS Postgres, Redis |
+
+Codebase rules: [CONVENTIONS.md](CONVENTIONS.md).
 
 ---
 
@@ -205,12 +208,14 @@ Global layout:
 
 ## 9. Deployment (AWS)
 
-- **Containers.** One image per app:
-  - `web`: an ECS Fargate service behind an ALB
-  - `worker`: an ECS Fargate service with one task and no inbound traffic
-- **Data:** RDS Postgres and ElastiCache Redis.
-- **Migrations:** `prisma migrate deploy` runs as a one-off ECS task in CI before the services roll.
-- **Secrets** in Secrets Manager: `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID/SECRET`.
+- **One EC2 instance running Docker Compose:**
+  - `web`: `next start`, behind Caddy or nginx for TLS
+  - `worker`: a long-running Bun process
+  - `redis`: Redis 7 with AOF persistence
+- **Postgres on RDS,** for managed backups. It could also run in Compose to save cost, but then you handle backups yourself.
+- **Why not one process?** BullMQ workers are kept out of the Next.js process. Next can run several workers and reloads on change in dev, either of which would duplicate jobs. The web app only *enqueues* jobs.
+- **Migrations:** `prisma migrate deploy` runs as a one-off container before `web` and `worker` restart.
+- **Secrets** in SSM Parameter Store or Secrets Manager, loaded into `.env` at deploy: `DATABASE_URL`, `REDIS_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID/SECRET`.
 - **Hand-written migration SQL** (Prisma can't express these):
   - Partial unique indexes on `Milestone` (event key; team key)
   - A partial unique index on `Conflict` (one open conflict per field)
@@ -219,9 +224,4 @@ Global layout:
 
 ## 10. Build order
 
-1. Monorepo skeleton, `packages/db`, BetterAuth with Google, app shell
-2. Core CRUD for hackathons, milestones, prizes, teams and members, with the activity log
-3. Action queue, hackathons list, detail page, `core.ranking`
-4. Archive rules, the worker with the sweep, the archive page
-5. API keys, the ingest endpoint, the ingest processor, conflicts and the Review pages
-6. Timeline, people, global activity
+See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
