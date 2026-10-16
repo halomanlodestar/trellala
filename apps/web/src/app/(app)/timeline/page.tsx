@@ -19,13 +19,13 @@ export default async function TimelinePage({ searchParams }: PageProps<"/timelin
   const tasks = toGanttTasks(rows);
 
   return (
-    <>
+    <div data-bleed>
       <PageHeader title="Timeline" description="Every active hackathon, side by side · IST" actions={<ViewToggle />} />
       {rows.length === 0 ? (
         <EmptyState icon={CalendarRange} text="Nothing active" />
       ) : (
         <TimelineViews view={mode} tasks={tasks} range={ganttRange(tasks, now)} now={now} events={toCalendarEvents(rows)} />
       )}
-    </>
+    </div>
   );
 }

@@ -13,7 +13,7 @@ export function MastheadNav() {
 
   return (
     <nav className="border-b">
-      <ul className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 [scrollbar-width:none] md:px-8">
+      <ul className="page-frame flex gap-5 overflow-x-auto scrollbar-none">
         {NAV_ITEMS.map(({ href, label, exact, badge }) => {
           const active = isActive(pathname, href, exact);
           return (

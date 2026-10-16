@@ -10,7 +10,7 @@ import { UserMenu } from "./user-menu";
 export function Masthead() {
   return (
     <header className="sticky top-0 z-30 bg-background">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:px-8">
+      <div className="page-frame flex h-14 items-center gap-4">
         <Link href="/" className="font-serif text-[1.75rem] leading-none tracking-tight italic">
           Trellala
         </Link>
@@ -22,7 +22,7 @@ export function Masthead() {
           </Suspense>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-4 md:px-8">
+      <div className="page-frame">
         <div className="h-1 border-y border-rule" />
       </div>
       <MastheadNav />
