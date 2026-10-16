@@ -1,69 +1,68 @@
 import { PRIZE_KIND_LABEL } from "@trellala/core/constants";
 import type { HackathonDetail } from "@trellala/core/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatUsd } from "@/lib/format";
 import { MilestoneTimeline } from "./milestone-timeline";
+import { SectionHead } from "./section-head";
 
 type Props = { hackathon: HackathonDetail; now: Date };
 
 export function Overview({ hackathon: h, now }: Props) {
-  return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MilestoneTimeline milestones={h.milestones} now={now} />
-        </CardContent>
-      </Card>
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Prizes</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {h.prizes.length === 0 && <p className="text-sm text-muted-foreground">None listed</p>}
-            {h.prizes.map((p) => (
-              <div key={p.id} className="flex flex-col">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium">{p.title}</span>
-                  <span className="text-sm tabular-nums">
-                    {p.amount !== null ? `${p.amount.toLocaleString("en-IN")} ${p.currency ?? ""}` : PRIZE_KIND_LABEL[p.kind]}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{p.description}</span>
-                  {p.estimatedUsd !== null && <span>≈ {formatUsd(p.estimatedUsd)}</span>}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3 text-sm">
-            <Detail label="Eligibility" value={h.eligibility} />
-            <Detail label="Effort" value={h.effortEstimate !== null ? `${h.effortEstimate}h` : null} />
-            <Detail label="Fit" value={h.fitScore !== null ? `${h.fitScore}/5` : null} />
-            <Detail label="Score" value={String(h.priority)} />
-            <Detail label="Description" value={h.description} />
-            <Detail label="Notes" value={h.notes} />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
+  const details = [
+    { label: "Eligibility", value: h.eligibility },
+    { label: "Effort", value: h.effortEstimate !== null ? `${h.effortEstimate}h` : null },
+    { label: "Fit", value: h.fitScore !== null ? `${h.fitScore}/5` : null },
+    { label: "Description", value: h.description },
+    { label: "Notes", value: h.notes },
+  ].filter((d) => d.value);
 
-function Detail({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null;
   return (
-    <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="whitespace-pre-wrap">{value}</div>
+    <div className="grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+      <section>
+        <SectionHead>Schedule</SectionHead>
+        <MilestoneTimeline milestones={h.milestones} now={now} />
+      </section>
+
+      <div className="flex flex-col gap-10">
+        <section>
+          <SectionHead>Prizes</SectionHead>
+          {h.prizes.length === 0 ? (
+            <p className="border-t border-rule pt-3 text-sm text-muted-foreground">None listed</p>
+          ) : (
+            <ul className="border-t border-rule">
+              {h.prizes.map((p) => (
+                <li key={p.id} className="flex flex-col gap-0.5 border-b py-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-medium">{p.title}</span>
+                    <span className="figures text-sm">
+                      {p.amount !== null ? `${p.amount.toLocaleString("en-IN")} ${p.currency ?? ""}` : PRIZE_KIND_LABEL[p.kind]}
+                    </span>
+                  </div>
+                  {(p.description || p.estimatedUsd !== null) && (
+                    <div className="flex justify-between gap-3 text-xs text-muted-foreground">
+                      <span>{p.description}</span>
+                      {p.estimatedUsd !== null && <span className="figures shrink-0">≈ {formatUsd(p.estimatedUsd)}</span>}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {details.length > 0 && (
+          <section>
+            <SectionHead>Details</SectionHead>
+            <dl className="border-t border-rule">
+              {details.map((d) => (
+                <div key={d.label} className="grid grid-cols-[6.5rem_1fr] gap-3 border-b py-3 text-sm">
+                  <dt className="caps pt-0.5 text-muted-foreground">{d.label}</dt>
+                  <dd className="whitespace-pre-wrap">{d.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

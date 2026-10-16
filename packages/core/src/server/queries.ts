@@ -12,6 +12,7 @@ import type {
   QueueGroup,
   QueueGroupKey,
   QueueItem,
+  SearchEntry,
   TeamView,
   TimelineRow,
 } from "../types";
@@ -202,6 +203,15 @@ export async function listTagSuggestions(): Promise<string[]> {
     UNION SELECT DISTINCT unnest("skills") AS tag FROM "user"
     ORDER BY tag`;
   return rows.map((r) => r.tag);
+}
+
+export async function listSearchIndex(): Promise<SearchEntry[]> {
+  const rows = await prisma.hackathon.findMany({
+    select: { id: true, name: true, type: true, archivedAt: true, tags: true },
+    orderBy: [{ archivedAt: { sort: "asc", nulls: "first" } }, { updatedAt: "desc" }],
+    take: 500,
+  });
+  return rows.map((h) => ({ id: h.id, name: h.name, type: h.type, archived: h.archivedAt !== null, tags: h.tags }));
 }
 
 export async function getProfile(userId: string): Promise<PersonView | null> {

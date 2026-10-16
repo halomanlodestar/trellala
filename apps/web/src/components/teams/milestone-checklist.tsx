@@ -2,7 +2,7 @@
 
 import { PROGRESS_STATE_LABEL } from "@trellala/core/constants";
 import type { MilestoneView, TeamView } from "@trellala/core/types";
-import { Check, Circle, CircleSlash, Lock, RotateCcw, SkipForward, Trash2, XCircle } from "lucide-react";
+import { Check, Circle, CircleSlash, RotateCcw, SkipForward, Trash2, XCircle } from "lucide-react";
 import { Deadline } from "@/components/common/deadline";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -30,17 +30,21 @@ export function MilestoneChecklist({ team, eventMilestones }: Props) {
         const Icon = STATE_ICON[state];
         const set = (s: "TODO" | "DONE" | "SKIPPED") => setProgress.mutate({ teamId: team.id, milestoneId: m.id, state: s });
         return (
-          <li key={m.id} className={cn("flex items-center gap-3 py-2", state === "MISSED" && "text-destructive")}>
-            <Icon className={cn("size-4 shrink-0", state === "DONE" && "text-emerald-600", state === "TODO" && "text-muted-foreground")} aria-label={PROGRESS_STATE_LABEL[state]} />
+          <li key={m.id} className={cn("group flex items-center gap-3 py-2.5", state === "MISSED" && "text-destructive")}>
+            <Icon
+              className={cn("size-4 shrink-0", state === "DONE" && "text-done", state === "TODO" && "text-muted-foreground")}
+              strokeWidth={1.75}
+              aria-label={PROGRESS_STATE_LABEL[state]}
+            />
             <div className="flex min-w-0 flex-1 flex-col">
-              <span className={cn("flex items-center gap-1.5 text-sm", (state === "DONE" || state === "SKIPPED") && "text-muted-foreground line-through")}>
-                {m.title}
-                {m.isHardDeadline && <Lock className="size-3" />}
-                {m.teamId && <span className="text-xs text-muted-foreground no-underline">team</span>}
+              <span className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                <span className={cn((state === "DONE" || state === "SKIPPED") && "text-muted-foreground line-through decoration-1")}>{m.title}</span>
+                {m.isHardDeadline && <span className="caps text-[10px] text-destructive">Hard</span>}
+                {m.teamId && <span className="caps text-[10px] text-muted-foreground">Team</span>}
               </span>
               {m.action && <span className="truncate text-xs text-muted-foreground">{m.action}</span>}
             </div>
-            {state === "TODO" && <Deadline at={m.endsAt} className="text-xs" />}
+            {state === "TODO" && <Deadline at={m.endsAt} />}
             <div className="flex gap-0.5">
               {state === "TODO" || state === "MISSED" ? (
                 <>

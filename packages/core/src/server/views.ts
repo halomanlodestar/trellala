@@ -36,6 +36,13 @@ export function toTeamViews(h: HackathonWithRelations, now: Date): TeamView[] {
   });
 }
 
+function timelineSpan(ms: { startsAt: Date | null; endsAt: Date }[]) {
+  if (ms.length === 0) return null;
+  const starts = ms.map((m) => (m.startsAt ?? m.endsAt).getTime());
+  const ends = ms.map((m) => m.endsAt.getTime());
+  return { start: new Date(Math.min(...starts)), end: new Date(Math.max(...ends)) };
+}
+
 export function toSummary(h: HackathonWithRelations, now: Date): HackathonSummary {
   const eventMilestones = h.milestones.map(toMilestone);
   const teams = toTeamViews(h, now);
@@ -65,6 +72,8 @@ export function toSummary(h: HackathonWithRelations, now: Date): HackathonSummar
     nextAction,
     priority: priorityScore({ nextAction, estimatedUsd, fitScore: h.fitScore, effortEstimate: h.effortEstimate, now }),
     hasMissedTeam: teams.some((t) => t.status === "MISSED"),
+    span: timelineSpan(eventMilestones),
+    milestoneCount: eventMilestones.length,
   };
 }
 

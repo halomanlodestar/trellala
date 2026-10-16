@@ -1,6 +1,7 @@
-import { ChevronLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ActivityFeed } from "@/components/activity/activity-feed";
+import { SectionHead } from "@/components/hackathons/detail/section-head";
 import { TeamCard } from "@/components/teams/team-card";
 import { loadActivity } from "@/server/queries/activity";
 import { loadTeam } from "@/server/queries/hackathons";
@@ -13,13 +14,16 @@ export default async function TeamPage({ params }: PageProps<"/hackathons/[id]/t
   const takenIds = hackathon.teams.flatMap((t) => t.members.map((m) => m.id));
 
   return (
-    <div className="flex flex-col gap-6">
-      <Link href={`/hackathons/${hackathon.id}?tab=teams`} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ChevronLeft className="size-4" /> {hackathon.name}
+    <div className="flex flex-col gap-10">
+      <Link href={`/hackathons/${hackathon.id}?tab=teams`} className="caps flex w-fit items-center gap-1.5 text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-3" /> {hackathon.name}
       </Link>
       <TeamCard team={team} hackathon={hackathon} people={people} takenIds={takenIds} />
-      {team.ideaDescription && <p className="text-sm whitespace-pre-wrap">{team.ideaDescription}</p>}
-      <ActivityFeed filters={{ hackathonId: hackathon.id }} firstPage={activity} showHackathon={false} />
+      {team.ideaDescription && <p className="max-w-prose font-serif text-xl leading-relaxed whitespace-pre-wrap">{team.ideaDescription}</p>}
+      <section>
+        <SectionHead>Activity</SectionHead>
+        <ActivityFeed filters={{ hackathonId: hackathon.id }} firstPage={activity} showHackathon={false} />
+      </section>
     </div>
   );
 }

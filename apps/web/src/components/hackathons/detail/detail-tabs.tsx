@@ -12,21 +12,22 @@ type Props = { hackathonId: string; active: string; teamCount: number };
 
 export function DetailTabs({ hackathonId, active, teamCount }: Props) {
   return (
-    <div className="mb-6 flex gap-1 border-b">
-      {TABS.map((t) => (
+    <nav className="mb-8 flex gap-6 border-b">
+      {TABS.map(({ id, label }) => (
         <Link
-          key={t.id}
-          href={t.id === "overview" ? `/hackathons/${hackathonId}` : `/hackathons/${hackathonId}?tab=${t.id}`}
+          key={id}
+          href={id === "overview" ? `/hackathons/${hackathonId}` : `/hackathons/${hackathonId}?tab=${id}`}
           scroll={false}
+          aria-current={active === id ? "page" : undefined}
           className={cn(
-            "-mb-px border-b-2 border-transparent px-3 py-2 text-sm text-muted-foreground hover:text-foreground",
-            active === t.id && "border-foreground font-medium text-foreground",
+            "caps -mb-px flex h-9 items-center gap-1.5 border-b-2 border-transparent text-muted-foreground hover:text-foreground",
+            active === id && "border-foreground text-foreground",
           )}
         >
-          {t.label}
-          {t.id === "teams" && <span className="ml-1 text-muted-foreground">{teamCount}</span>}
+          {label}
+          {id === "teams" && <span className="figures text-muted-foreground">{teamCount}</span>}
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }

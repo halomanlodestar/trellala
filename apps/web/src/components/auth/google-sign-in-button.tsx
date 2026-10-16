@@ -1,6 +1,6 @@
 "use client";
 
-import { LogIn } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,8 @@ export function GoogleSignInButton() {
   }
 
   return (
-    <Button className="w-full" size="lg" onClick={signIn} disabled={pending}>
-      <LogIn /> Continue with Google
+    <Button className="h-12 w-full justify-between rounded-sm px-5 text-base" size="lg" onClick={signIn} disabled={pending}>
+      Continue with Google <ArrowRight />
     </Button>
   );
 }

@@ -1,5 +1,3 @@
-/** @format */
-
 import {
   ARCHIVE_REASON_LABEL,
   HACKATHON_MODE_LABEL,
@@ -7,88 +5,61 @@ import {
   HACKATHON_TYPE_LABEL,
   TEAM_STATUS_LABEL,
 } from "@trellala/core/constants";
-import type {
-  ArchiveReason,
-  HackathonMode,
-  HackathonStage,
-  HackathonType,
-  TeamStatus,
-} from "@trellala/core/types";
-import { Badge } from "@/components/ui/badge";
+import type { ArchiveReason, HackathonMode, HackathonStage, HackathonType, TeamStatus } from "@trellala/core/types";
 import { cn } from "@/lib/utils";
 
-const TYPE_COLOR: Record<HackathonType, string> = {
-  BUILDATHON: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  IDEATHON: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
-  CTF: "bg-red-500/10 text-red-700 dark:text-red-300",
-  DSA: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  GRANT: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  BOUNTY: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300",
-  OTHER: "bg-muted text-muted-foreground",
-};
+// Printed-label style: small mono caps, no fills. Only outcomes get colour.
+
+const label = "caps inline-flex items-center gap-1 whitespace-nowrap";
 
 export function TypeBadge({ type }: { type: HackathonType }) {
-  return (
-    <Badge variant="secondary" className={cn("border-0", TYPE_COLOR[type])}>
-      {HACKATHON_TYPE_LABEL[type]}
-    </Badge>
-  );
+  return <span className={cn(label, "text-foreground")}>{HACKATHON_TYPE_LABEL[type]}</span>;
 }
 
 export function ModeBadge({ mode }: { mode: HackathonMode }) {
-  return <Badge variant="outline">{HACKATHON_MODE_LABEL[mode]}</Badge>;
+  return <span className={cn(label, "text-muted-foreground")}>{HACKATHON_MODE_LABEL[mode]}</span>;
 }
 
-export function StageBadge({ stage }: { stage: HackathonStage }) {
-  return <Badge variant="outline">{HACKATHON_STAGE_LABEL[stage]}</Badge>;
-}
-
-const STATUS_COLOR: Partial<Record<TeamStatus, string>> = {
-  MISSED: "bg-destructive/10 text-destructive",
-  ELIMINATED: "bg-destructive/10 text-destructive",
-  WITHDRAWN: "bg-muted text-muted-foreground",
-  WON: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-  SHORTLISTED: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  SUBMITTED: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
-};
-
-export function TeamStatusBadge({ status }: { status: TeamStatus }) {
+/** "Buildathon · Online" on one line. */
+export function KindLine({ type, mode, className }: { type: HackathonType; mode: HackathonMode; className?: string }) {
   return (
-    <Badge variant="secondary" className={cn("border-0", STATUS_COLOR[status])}>
-      {TEAM_STATUS_LABEL[status]}
-    </Badge>
+    <span className={cn(label, "text-muted-foreground", className)}>
+      <span className="text-foreground">{HACKATHON_TYPE_LABEL[type]}</span>
+      <span aria-hidden>·</span>
+      {HACKATHON_MODE_LABEL[mode]}
+    </span>
   );
 }
 
-export function ArchiveReasonBadge({
-  reason,
-}: {
-  reason: ArchiveReason | null;
-}) {
-  if (!reason) return null;
-
-  return <Badge variant="secondary">{ARCHIVE_REASON_LABEL[reason]}</Badge>;
+export function StageBadge({ stage }: { stage: HackathonStage }) {
+  return <span className={cn(label, "text-muted-foreground")}>{HACKATHON_STAGE_LABEL[stage]}</span>;
 }
 
-export function Tags({
-  tags,
-  className,
-}: {
-  tags: string[];
-  className?: string;
-}) {
-  if (tags.length === 0) return null;
+const STATUS_COLOR: Partial<Record<TeamStatus, string>> = {
+  MISSED: "text-destructive border-destructive/40",
+  ELIMINATED: "text-destructive border-destructive/40",
+  WITHDRAWN: "text-muted-foreground",
+  WON: "text-done border-done/50",
+  SHORTLISTED: "text-foreground border-rule",
+  SUBMITTED: "text-foreground border-rule",
+};
 
+export function TeamStatusBadge({ status }: { status: TeamStatus }) {
+  return <span className={cn(label, "rounded-sm border px-1.5 py-px", STATUS_COLOR[status])}>{TEAM_STATUS_LABEL[status]}</span>;
+}
+
+export function ArchiveReasonBadge({ reason }: { reason: ArchiveReason | null }) {
+  if (!reason) return null;
+  return <span className={cn(label, "text-muted-foreground")}>{ARCHIVE_REASON_LABEL[reason]}</span>;
+}
+
+export function Tags({ tags, className }: { tags: string[]; className?: string }) {
+  if (tags.length === 0) return null;
   return (
-    <div className={cn("flex flex-wrap gap-1", className)}>
+    <span className={cn("inline-flex flex-wrap gap-x-2 gap-y-0.5 font-mono text-[11px] text-muted-foreground", className)}>
       {tags.map((t) => (
-        <span
-          key={t}
-          className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
-        >
-          {t}
-        </span>
+        <span key={t}>#{t}</span>
       ))}
-    </div>
+    </span>
   );
 }

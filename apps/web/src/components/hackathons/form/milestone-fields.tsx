@@ -4,6 +4,7 @@ import { MILESTONE_KIND_LABEL } from "@trellala/core/constants";
 import type { HackathonFormInput, HackathonType } from "@trellala/core/types";
 import { LayoutTemplate, Plus, Trash2 } from "lucide-react";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { DateTimePicker } from "@/components/common/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -62,20 +63,32 @@ export function MilestoneFields() {
                 <FieldLabel>Kind</FieldLabel>
                 <EnumSelect name={`milestones.${i}.kind`} options={MILESTONE_KIND_LABEL} />
               </Field>
-              <Field className="sm:col-span-2">
-                <FieldLabel htmlFor={`m-${i}-start`}>Start</FieldLabel>
-                <Input id={`m-${i}-start`} type="datetime-local" {...register(`milestones.${i}.startsAt`, textInput)} />
-              </Field>
-              <Field className="sm:col-span-3" data-invalid={!!e?.endsAt}>
+              <Field className="sm:col-span-5" data-invalid={!!e?.endsAt}>
                 <FieldLabel htmlFor={`m-${i}-end`}>Deadline</FieldLabel>
-                <Input id={`m-${i}-end`} type="datetime-local" {...register(`milestones.${i}.endsAt`)} />
+                <Controller
+                  control={control}
+                  name={`milestones.${i}.endsAt`}
+                  render={({ field }) => (
+                    <DateTimePicker id={`m-${i}-end`} value={field.value as string} onChange={(v) => field.onChange(v ?? "")} invalid={!!e?.endsAt} />
+                  )}
+                />
                 <FieldError errors={[e?.endsAt ? { message: "Required" } : undefined]} />
               </Field>
-              <Field className="sm:col-span-7">
+              <Field className="sm:col-span-4">
+                <FieldLabel htmlFor={`m-${i}-start`}>Opens</FieldLabel>
+                <Controller
+                  control={control}
+                  name={`milestones.${i}.startsAt`}
+                  render={({ field }) => (
+                    <DateTimePicker id={`m-${i}-start`} value={field.value as string | null} onChange={field.onChange} clearable placeholder="Optional" />
+                  )}
+                />
+              </Field>
+              <Field className="sm:col-span-8">
                 <FieldLabel htmlFor={`m-${i}-action`}>Action</FieldLabel>
                 <Input id={`m-${i}-action`} placeholder="What needs to be done" {...register(`milestones.${i}.action`, textInput)} />
               </Field>
-              <div className="flex items-end gap-4 sm:col-span-5">
+              <div className="flex items-end gap-4 sm:col-span-12">
                 <Controller
                   control={control}
                   name={`milestones.${i}.requiresAction`}

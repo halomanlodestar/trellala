@@ -7,9 +7,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-serif: var(--font-instrument);
+  --font-heading: var(--font-instrument);
+  --color-soon: var(--soon);
+  --color-done: var(--done);
+  --color-rule: var(--rule);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +52,73 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* "Timetable": printed paper and ink. Colour carries meaning only —
+   red = late / hard deadline, ochre = due soon, green = done. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(0.971 0.011 86);
+  --foreground: oklch(0.24 0.014 60);
+  --card: oklch(0.984 0.008 86);
+  --card-foreground: oklch(0.24 0.014 60);
+  --popover: oklch(0.99 0.006 86);
+  --popover-foreground: oklch(0.24 0.014 60);
+  --primary: oklch(0.24 0.014 60);
+  --primary-foreground: oklch(0.975 0.01 86);
+  --secondary: oklch(0.938 0.013 84);
+  --secondary-foreground: oklch(0.24 0.014 60);
+  --muted: oklch(0.938 0.013 84);
+  --muted-foreground: oklch(0.5 0.016 65);
+  --accent: oklch(0.925 0.016 84);
+  --accent-foreground: oklch(0.24 0.014 60);
+  --destructive: oklch(0.52 0.19 29);
+  --soon: oklch(0.58 0.13 66);
+  --done: oklch(0.5 0.1 152);
+  --border: oklch(0.86 0.016 80);
+  --rule: oklch(0.24 0.014 60);
+  --input: oklch(0.82 0.018 80);
+  --ring: oklch(0.52 0.19 29 / 35%);
+  --chart-1: oklch(0.52 0.19 29);
+  --chart-2: oklch(0.45 0.08 240);
+  --chart-3: oklch(0.5 0.1 152);
+  --chart-4: oklch(0.62 0.13 66);
+  --chart-5: oklch(0.4 0.03 60);
+  --radius: 0.25rem;
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.185 0.008 70);
+  --foreground: oklch(0.91 0.016 86);
+  --card: oklch(0.205 0.008 70);
+  --card-foreground: oklch(0.91 0.016 86);
+  --popover: oklch(0.225 0.009 70);
+  --popover-foreground: oklch(0.91 0.016 86);
+  --primary: oklch(0.91 0.016 86);
+  --primary-foreground: oklch(0.2 0.008 70);
+  --secondary: oklch(0.245 0.009 70);
+  --secondary-foreground: oklch(0.91 0.016 86);
+  --muted: oklch(0.245 0.009 70);
+  --muted-foreground: oklch(0.66 0.014 78);
+  --accent: oklch(0.26 0.01 70);
+  --accent-foreground: oklch(0.91 0.016 86);
+  --destructive: oklch(0.68 0.17 30);
+  --soon: oklch(0.78 0.12 76);
+  --done: oklch(0.72 0.11 152);
+  --border: oklch(0.32 0.01 72);
+  --rule: oklch(0.91 0.016 86);
+  --input: oklch(0.36 0.012 72);
+  --ring: oklch(0.68 0.17 30 / 40%);
+  --chart-1: oklch(0.68 0.17 30);
+  --chart-2: oklch(0.7 0.08 240);
+  --chart-3: oklch(0.72 0.11 152);
+  --chart-4: oklch(0.78 0.12 76);
+  --chart-5: oklch(0.7 0.02 70);
 }
 
 @layer base {
@@ -127,4 +131,81 @@
   html {
     @apply font-sans;
   }
+  ::selection {
+    background: color-mix(in oklch, var(--destructive) 22%, transparent);
+  }
+}
+
+/* Small-caps mono label for section heads, column heads and metadata keys. */
+@utility caps {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Numbers that should line up in columns. */
+@utility figures {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ── Library theming: map SVAR Gantt + FullCalendar onto our tokens ─────────── */
+
+.trellala-gantt .wx-willow-theme,
+.trellala-gantt .wx-willow-dark-theme {
+  --wx-font-family: var(--font-sans);
+  --wx-background: var(--card);
+  --wx-color-primary: var(--foreground);
+  --wx-gantt-border: 1px solid var(--border);
+  --wx-gantt-border-color: var(--border);
+  --wx-gantt-select-color: color-mix(in oklch, var(--foreground) 6%, transparent);
+  --wx-gantt-summary-color: color-mix(in oklch, var(--foreground) 14%, transparent);
+  --wx-gantt-summary-fill-color: var(--foreground);
+  --wx-gantt-summary-font-color: var(--foreground);
+  --wx-gantt-summary-border: 1px solid color-mix(in oklch, var(--foreground) 40%, transparent);
+  --wx-gantt-task-color: color-mix(in oklch, var(--chart-2) 22%, transparent);
+  --wx-gantt-task-fill-color: var(--chart-2);
+  --wx-gantt-task-font-color: var(--foreground);
+  --wx-gantt-task-border: 1px solid color-mix(in oklch, var(--chart-2) 50%, transparent);
+  --wx-gantt-milestone-color: var(--destructive);
+  --wx-gantt-bar-border-radius: 2px;
+  --wx-gantt-marker-color: var(--destructive);
+  --wx-gantt-marker-font-color: var(--primary-foreground);
+  height: 100%;
+}
+
+.trellala-calendar {
+  --fc-breezy-primary: var(--primary);
+  --fc-breezy-primary-foreground: var(--primary-foreground);
+  --fc-breezy-primary-over: color-mix(in oklch, var(--primary) 88%, var(--background));
+  --fc-breezy-event: var(--foreground);
+  --fc-breezy-event-contrast: var(--background);
+  --fc-breezy-background: var(--card);
+  --fc-breezy-background-event: color-mix(in oklch, var(--foreground) 8%, var(--card));
+  --fc-breezy-popover: var(--popover);
+  --fc-breezy-popover-border: var(--border);
+  --fc-breezy-foreground: var(--foreground);
+  --fc-breezy-muted-foreground: var(--muted-foreground);
+  --fc-breezy-faint-foreground: var(--muted-foreground);
+  --fc-breezy-border: var(--border);
+  --fc-breezy-muted-border: var(--border);
+  --fc-breezy-strong-border: var(--rule);
+  --fc-breezy-faint: var(--muted);
+  --fc-breezy-muted: var(--muted);
+  --fc-breezy-highlight: color-mix(in oklch, var(--destructive) 7%, transparent);
+  --fc-breezy-now: var(--destructive);
+  --fc-breezy-secondary: var(--secondary);
+  --fc-breezy-secondary-foreground: var(--secondary-foreground);
+  --fc-breezy-secondary-border: var(--border);
+  --fc-breezy-secondary-over: var(--accent);
+  --fc-breezy-selected: var(--accent);
+  font-family: var(--font-sans);
+}
+
+.trellala-calendar .trellala-hard {
+  font-weight: 600;
+  color: var(--destructive);
 }

@@ -109,6 +109,9 @@ export type HackathonSummary = {
   nextAction: NextAction | null;
   priority: number;
   hasMissedTeam: boolean;
+  /** First start (or deadline) to last deadline of the event timeline. */
+  span: { start: Date; end: Date } | null;
+  milestoneCount: number;
 };
 
 export type HackathonDetail = HackathonSummary & {
@@ -243,3 +246,5 @@ export type IngestItemResult =
   | { index: number; status: "invalid"; eventId: string; issues: unknown };
 
 export type SessionUser = { id: string; name: string; email: string; image: string | null };
+
+export type SearchEntry = { id: string; name: string; type: HackathonType; archived: boolean; tags: string[] };

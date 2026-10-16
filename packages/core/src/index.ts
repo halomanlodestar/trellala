@@ -25,6 +25,7 @@ export {
   listHackathons,
   listPeople,
   listPeopleWithTeams,
+  listSearchIndex,
   listTagSuggestions,
 } from "./server/queries";
 export {

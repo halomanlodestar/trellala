@@ -8,12 +8,13 @@ import { EmptyState } from "@/components/common/empty-state";
 import { MemberAvatars } from "@/components/common/member-avatars";
 import { UnarchiveButton } from "@/components/hackathons/detail/unarchive-button";
 import { PageHeader } from "@/components/layout/page-header";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatUsd } from "@/lib/format";
-import { formatIstShort } from "@/lib/time";
+import { formatIst } from "@/lib/time";
 import { loadArchived } from "@/server/queries/hackathons";
 
 export const metadata: Metadata = { title: "Archive" };
+
+const COLS = "grid grid-cols-[5rem_1fr_auto] gap-x-4 md:grid-cols-[6rem_minmax(0,1.6fr)_minmax(0,1fr)_5.5rem_6rem_auto]";
 
 export default async function ArchivePage({ searchParams }: PageProps<"/archive">) {
   const parsed = archiveFilterSchema.safeParse(await searchParams);
@@ -21,48 +22,47 @@ export default async function ArchivePage({ searchParams }: PageProps<"/archive"
 
   return (
     <>
-      <PageHeader title="Archive" actions={<ArchiveFilter />} />
+      <PageHeader title="Archive" description={`${rows.length} filed away`} actions={<ArchiveFilter />} />
       {rows.length === 0 ? (
         <EmptyState icon={Archive} text="Nothing archived" />
       ) : (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead className="hidden md:table-cell">Prize</TableHead>
-                <TableHead className="hidden sm:table-cell">Teams</TableHead>
-                <TableHead>Archived</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((h) => (
-                <TableRow key={h.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <TypeBadge type={h.type} />
-                      <Link href={`/hackathons/${h.id}`} className="font-medium hover:underline">
-                        {h.name}
-                      </Link>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <ArchiveReasonBadge reason={h.archiveReason} />
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{formatUsd(h.estimatedUsd) ?? "—"}</TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <MemberAvatars people={h.members} />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground tabular-nums">{h.archivedAt && formatIstShort(h.archivedAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <UnarchiveButton hackathonId={h.id} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div>
+          <div className={`${COLS} caps border-b border-rule pb-2 text-muted-foreground`}>
+            <span>Filed</span>
+            <span>Hackathon</span>
+            <span className="hidden md:block">Reason</span>
+            <span className="hidden text-right md:block">Prize</span>
+            <span className="hidden md:block">Members</span>
+            <span />
+          </div>
+          <ol>
+            {rows.map((h) => (
+              <li key={h.id} className={`${COLS} items-center border-b py-3 text-muted-foreground`}>
+                <span className="figures text-xs">{h.archivedAt ? formatIst(h.archivedAt, "d MMM yy") : "—"}</span>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <Link href={`/hackathons/${h.id}`} className="truncate font-medium text-foreground underline-offset-4 hover:underline">
+                    {h.name}
+                  </Link>
+                  <span className="flex gap-3">
+                    <TypeBadge type={h.type} />
+                    <span className="md:hidden">
+                      <ArchiveReasonBadge reason={h.archiveReason} />
+                    </span>
+                  </span>
+                </div>
+                <span className="hidden md:block">
+                  <ArchiveReasonBadge reason={h.archiveReason} />
+                </span>
+                <span className="figures hidden text-right text-sm md:block">{formatUsd(h.estimatedUsd) ?? "—"}</span>
+                <span className="hidden md:block">
+                  <MemberAvatars people={h.members} max={3} />
+                </span>
+                <span className="text-right">
+                  <UnarchiveButton hackathonId={h.id} />
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
     </>

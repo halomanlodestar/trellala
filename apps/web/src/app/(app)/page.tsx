@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 import { QueueFilters } from "@/components/queue/queue-filters";
 import { QueueList } from "@/components/queue/queue-list";
+import { QueueStats } from "@/components/queue/queue-stats";
 import { loadTagSuggestions } from "@/server/queries/people";
 import { loadQueue } from "@/server/queries/queue";
 
@@ -14,8 +15,8 @@ export default async function QueuePage({ searchParams }: PageProps<"/">) {
   const [{ groups }, tags] = await Promise.all([loadQueue(filter), loadTagSuggestions()]);
   return (
     <>
-      <PageHeader title="Queue" actions={<QueueFilters tags={tags} />} />
-      <QueueList groups={groups} />
+      <PageHeader title="The queue" description={<QueueStats groups={groups} />} actions={<QueueFilters tags={tags} />} />
+      <QueueList key={JSON.stringify(filter)} groups={groups} />
     </>
   );
 }

@@ -4,7 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { teamMilestoneFormSchema } from "@trellala/core/schemas";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { DateTimePicker } from "@/components/common/date-time-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -49,7 +50,13 @@ export function TeamMilestoneDialog({ teamId }: Props) {
           </Field>
           <Field data-invalid={!!err.endsAt}>
             <FieldLabel htmlFor="tm-end">Due (IST)</FieldLabel>
-            <Input id="tm-end" type="datetime-local" {...form.register("endsAt")} />
+            <Controller
+              control={form.control}
+              name="endsAt"
+              render={({ field }) => (
+                <DateTimePicker id="tm-end" value={field.value as string} onChange={(v) => field.onChange(v ?? "")} invalid={!!err.endsAt} />
+              )}
+            />
             <FieldError errors={[err.endsAt ? { message: "Required" } : undefined]} />
           </Field>
           <Field>

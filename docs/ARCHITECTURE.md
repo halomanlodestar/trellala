@@ -20,7 +20,7 @@ Data model: [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.pr
 |---|---|
 | Language / runtime | TypeScript, Bun workspaces |
 | Web + API | Next.js (App Router, server components, server actions, route handlers). No separate backend. |
-| UI | shadcn/ui, TanStack Query, React Hook Form |
+| UI | shadcn/ui (sidebar shell, ⌘K command palette), TanStack Query, React Hook Form, motion (animations), @dnd-kit (board drag & drop), SVAR React Gantt (timeline), FullCalendar v7 (calendar) |
 | DB | PostgreSQL + Prisma 7 |
 | Auth | BetterAuth, Google sign-in, open signup |
 | Queue | BullMQ on Redis, processed by the separate `apps/worker` process |

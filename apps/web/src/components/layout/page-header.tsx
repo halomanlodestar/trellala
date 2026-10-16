@@ -1,15 +1,19 @@
 import type { ReactNode } from "react";
 
-type Props = { title: ReactNode; actions?: ReactNode; children?: ReactNode };
+type Props = { title: ReactNode; description?: ReactNode; actions?: ReactNode; children?: ReactNode };
 
-export function PageHeader({ title, actions, children }: Props) {
+/** Serif page title over a solid rule; filters (children) sit just under the rule. */
+export function PageHeader({ title, description, actions, children }: Props) {
   return (
-    <div className="mb-6 flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+    <div className="mb-8">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-rule pb-4">
+        <div className="flex min-w-0 flex-col gap-2">
+          <h1 className="font-serif text-4xl leading-[0.95] tracking-tight md:text-5xl">{title}</h1>
+          {description && <p className="caps text-muted-foreground">{description}</p>}
+        </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
-      {children}
+      {children && <div className="border-b py-2.5">{children}</div>}
     </div>
   );
 }
