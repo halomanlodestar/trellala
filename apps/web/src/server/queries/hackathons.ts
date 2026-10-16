@@ -1,5 +1,6 @@
 import "server-only";
 import * as core from "@trellala/core";
+import { buildTimelineLanes } from "@trellala/core/rules";
 import type { ArchiveReason, HackathonListFilter } from "@trellala/core/types";
 import { notFound } from "next/navigation";
 import { requireUser } from "../auth";
@@ -28,9 +29,10 @@ export async function loadTeam(teamId: string) {
   return t;
 }
 
-export async function loadTimeline() {
+export async function loadTimeline(now: Date) {
   await requireUser();
-  return core.getTimeline();
+  const rows = await core.getTimeline();
+  return { rows, lanes: buildTimelineLanes(rows, now) };
 }
 
 export async function loadHackathonSources(id: string) {

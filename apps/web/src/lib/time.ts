@@ -1,5 +1,5 @@
 // The only place UI code formats times. Everything is shown in IST.
-export { formatIst, formatIstShort, relativeTime, toIstInput, istDayDiff } from "@trellala/core/time";
+export { addIstDays, formatIst, formatIstShort, istDayDiff, relativeTime, startOfIstDay, toIstInput } from "@trellala/core/time";
 
 /** Compact signed countdown: "45m", "5h 40m", "2d 4h", "−3h 12m" once past. */
 export function countdown(at: Date, now: Date): string {

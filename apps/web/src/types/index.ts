@@ -17,17 +17,16 @@ export type QueueGroupMeta = Record<QueueGroupKey, { label: string; tone: Tone }
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 
-export type GanttTask = {
-  id: string;
-  text: string;
-  type: "summary" | "task" | "milestone";
-  start: Date;
-  end?: Date;
-  progress?: number;
-  parent?: string;
-  open?: boolean;
-  hackathonId: string;
-};
+export type TimelineParams = import("zod").infer<typeof import("@/schemas/timeline").timelineParamsSchema>;
+
+export type TimelineZoom = TimelineParams["zoom"];
+
+export type TimelineLayer = "phases" | "info" | "labels" | "teams" | "load" | "weekends";
+
+export type TimelineLayers = Record<TimelineLayer, boolean>;
+
+/** Visible range, as IST midnights; `days` holds one entry per day from `start` up to `end`. */
+export type TimelineWindow = { start: Date; end: Date; days: Date[] };
 
 export type CalendarEvent = {
   id: string;

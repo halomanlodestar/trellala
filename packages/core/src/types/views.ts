@@ -159,8 +159,45 @@ export type TimelineRow = {
   hackathonId: string;
   name: string;
   type: HackathonType;
+  mode: HackathonMode;
+  estimatedUsd: number | null;
   milestones: MilestoneView[];
   teams: { id: string; name: string; status: TeamStatus; milestones: MilestoneView[]; progress: ProgressView[] }[];
+};
+
+/** How a deadline tick is drawn: hard action, ordinary action, or informational. */
+export type TimelineMarkKind = "hard" | "action" | "info";
+
+/** A team's standing on one action. `late` = past a soft deadline, still TODO. */
+export type TeamMarkState = "done" | "skipped" | "missed" | "late" | "todo";
+
+export type TimelinePhase = { milestoneId: string; title: string; startsAt: Date; endsAt: Date };
+
+export type TimelineMark = { milestoneId: string; title: string; at: Date; kind: TimelineMarkKind };
+
+export type TimelineTeamMark = { milestoneId: string; title: string; at: Date; state: TeamMarkState; teamOnly: boolean };
+
+export type TimelineTeam = {
+  id: string;
+  name: string;
+  status: TeamStatus;
+  missed: boolean;
+  done: number;
+  total: number;
+  marks: TimelineTeamMark[];
+};
+
+/** One hackathon's row on the timeline: phases as spans, deadlines as ticks, plus per-team standing. */
+export type TimelineLane = {
+  hackathonId: string;
+  name: string;
+  type: HackathonType;
+  mode: HackathonMode;
+  estimatedUsd: number | null;
+  phases: TimelinePhase[];
+  marks: TimelineMark[];
+  next: NextAction | null;
+  teams: TimelineTeam[];
 };
 
 export type ActivityItem = {

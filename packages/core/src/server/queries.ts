@@ -16,7 +16,7 @@ import type {
   TeamView,
   TimelineRow,
 } from "../types";
-import { hackathonInclude, toMilestone, toPerson, toProgress, userSelect } from "./mappers";
+import { hackathonInclude, num, toMilestone, toPerson, toProgress, userSelect } from "./mappers";
 import { toDetail, toSummary, toTeamViews } from "./views";
 
 function listWhere(f: Partial<HackathonListFilter>, archived: boolean): Prisma.HackathonWhereInput {
@@ -157,6 +157,8 @@ export async function getTimeline(): Promise<TimelineRow[]> {
       hackathonId: h.id,
       name: h.name,
       type: h.type,
+      mode: h.mode,
+      estimatedUsd: num(h.estimatedUsd),
       milestones: h.milestones.map(toMilestone),
       teams: h.teams.map((t) => ({
         id: t.id,

@@ -134,6 +134,33 @@
   ::selection {
     background: color-mix(in oklch, var(--destructive) 22%, transparent);
   }
+
+  /* Scrollbars: a thin ink-tinted thumb on no track, in both themes. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--foreground) 22%, transparent) transparent;
+  }
+  *:hover {
+    scrollbar-color: color-mix(in oklch, var(--foreground) 40%, transparent) transparent;
+  }
+  /* Safari and older Chromium, which ignore the standard properties. */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--foreground) 22%, transparent);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklch, var(--foreground) 40%, transparent);
+  }
 }
 
 /* The page column shared by the masthead and content. Wide, but capped so text
@@ -162,6 +189,13 @@ body:has([data-bleed]) .page-frame {
   text-transform: uppercase;
 }
 
+/* Floating surfaces (tooltips, menus, popovers, dialogs): a printed slip with an
+   ink edge and a hard offset shadow instead of a soft blur. */
+@utility paper-sheet {
+  border: 1px solid var(--rule);
+  box-shadow: 4px 4px 0 color-mix(in oklch, var(--foreground) 12%, transparent);
+}
+
 /* Numbers that should line up in columns. */
 @utility figures {
   font-family: var(--font-mono);
@@ -169,30 +203,7 @@ body:has([data-bleed]) .page-frame {
   letter-spacing: -0.01em;
 }
 
-/* ── Library theming: map SVAR Gantt + FullCalendar onto our tokens ─────────── */
-
-.trellala-gantt .wx-willow-theme,
-.trellala-gantt .wx-willow-dark-theme {
-  --wx-font-family: var(--font-sans);
-  --wx-background: var(--card);
-  --wx-color-primary: var(--foreground);
-  --wx-gantt-border: 1px solid var(--border);
-  --wx-gantt-border-color: var(--border);
-  --wx-gantt-select-color: color-mix(in oklch, var(--foreground) 6%, transparent);
-  --wx-gantt-summary-color: color-mix(in oklch, var(--foreground) 14%, transparent);
-  --wx-gantt-summary-fill-color: var(--foreground);
-  --wx-gantt-summary-font-color: var(--foreground);
-  --wx-gantt-summary-border: 1px solid color-mix(in oklch, var(--foreground) 40%, transparent);
-  --wx-gantt-task-color: color-mix(in oklch, var(--chart-2) 22%, transparent);
-  --wx-gantt-task-fill-color: var(--chart-2);
-  --wx-gantt-task-font-color: var(--foreground);
-  --wx-gantt-task-border: 1px solid color-mix(in oklch, var(--chart-2) 50%, transparent);
-  --wx-gantt-milestone-color: var(--destructive);
-  --wx-gantt-bar-border-radius: 2px;
-  --wx-gantt-marker-color: var(--destructive);
-  --wx-gantt-marker-font-color: var(--primary-foreground);
-  height: 100%;
-}
+/* ── Library theming: map FullCalendar onto our tokens ─────────── */
 
 .trellala-calendar {
   --fc-breezy-primary: var(--primary);

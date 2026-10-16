@@ -14,6 +14,7 @@
     "reset": "prisma migrate reset",
     "status": "prisma migrate status",
     "seed": "prisma db seed",
+    "seed:demo": "bun prisma/seed-demo.ts",
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit"
   },

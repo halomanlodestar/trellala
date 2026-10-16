@@ -3,28 +3,30 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
-import { TimelineViews } from "@/components/timeline/timeline-views";
-import { ViewToggle } from "@/components/timeline/view-toggle";
-import { ganttRange, toCalendarEvents, toGanttTasks } from "@/lib/timeline";
+import { CalendarLoader } from "@/components/timeline/calendar-loader";
+import { LanesView } from "@/components/timeline/lanes-view";
+import { TimelineControls } from "@/components/timeline/timeline-controls";
+import { toCalendarEvents } from "@/lib/timeline";
+import { timelineParamsSchema } from "@/schemas/timeline";
 import { loadTimeline } from "@/server/queries/hackathons";
 
 export const metadata: Metadata = { title: "Timeline" };
 
 export default async function TimelinePage({ searchParams }: PageProps<"/timeline">) {
-  const { view } = await searchParams;
-  const rows = await loadTimeline();
-  const mode = view === "calendar" ? "calendar" : "gantt";
+  const params = timelineParamsSchema.parse(await searchParams);
   await connection();
   const now = new Date();
-  const tasks = toGanttTasks(rows);
+  const { rows, lanes } = await loadTimeline(now);
 
   return (
     <div data-bleed>
-      <PageHeader title="Timeline" description="Every active hackathon, side by side · IST" actions={<ViewToggle />} />
+      <PageHeader title="Timeline" description={`${lanes.length} active · IST`} actions={<TimelineControls {...params} />} />
       {rows.length === 0 ? (
         <EmptyState icon={CalendarRange} text="Nothing active" />
+      ) : params.view === "calendar" ? (
+        <CalendarLoader events={toCalendarEvents(rows)} />
       ) : (
-        <TimelineViews view={mode} tasks={tasks} range={ganttRange(tasks, now)} now={now} events={toCalendarEvents(rows)} />
+        <LanesView lanes={lanes} zoom={params.zoom} now={now} />
       )}
     </div>
   );

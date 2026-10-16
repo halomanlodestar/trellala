@@ -20,7 +20,7 @@ Data model: [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.pr
 |---|---|
 | Language / runtime | TypeScript, Bun workspaces |
 | Web + API | Next.js (App Router, server components, server actions, route handlers). No separate backend. |
-| UI | shadcn/ui (sidebar shell, ⌘K command palette), TanStack Query, React Hook Form, motion (animations), @dnd-kit (board drag & drop), SVAR React Gantt (timeline), FullCalendar v7 (calendar) |
+| UI | shadcn/ui (masthead shell, ⌘K command palette), TanStack Query, React Hook Form, motion (animations), @dnd-kit (board drag & drop), hand-built CSS-grid lanes (timeline), FullCalendar v7 (calendar) |
 | DB | PostgreSQL + Prisma 7 |
 | Auth | BetterAuth, Google sign-in, open signup |
 | Queue | BullMQ on Redis, processed by the separate `apps/worker` process |
@@ -193,7 +193,7 @@ Global layout:
 | ↳ Sources tab | | IngestEvents for this hackathon, `fieldSources` per field, and links to open conflicts. |
 | `/hackathons/[id]/edit` | Edit | Edit fields, milestones and prizes. Saving marks the edited fields as user-sourced. |
 | `/hackathons/[id]/teams/[teamId]` | Team detail | Linkable full view of one team: idea, members, its milestone checklist, status changes, activity. |
-| `/timeline` | **Timeline** | Gantt chart with one row per active hackathon (expandable into one row per team), milestone markers, a today line, and week/month zoom. |
+| `/timeline` | **Timeline** | One lane per active hackathon: phases as bars, deadlines as diamonds (hard ones red), a now line, and 2-week / 6-week / 3-month zoom. A Layers bar toggles info milestones, all labels, per-team rows (✓ / ✗ against each action), a hard-deadlines-per-day strip and weekend shading. Calendar view alongside. |
 | `/me` | **My work** | The signed-in user's teams and next actions. |
 | `/archive` | **Archive** | Archived hackathons, filterable by reason (manual reasons, Concluded, All teams out, No team registered). Unarchive button. Team outcomes (won/lost) for history. |
 | `/review` | **Review** | Tabs: **Conflicts** (open conflicts grouped by hackathon) and **Failed ingests** (error and payload). |
