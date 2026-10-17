@@ -6,7 +6,7 @@ The instance (t3.micro) runs only Node, PM2 and cloudflared. Postgres (RDS) and 
 
 ```text
 /srv/trellala/
-  shared/.env              real secrets (see .env.example), owned by trellala, mode 600
+  shared/.env              real secrets (see .env.example), owned by ubuntu, mode 600
   releases/<sha>/          one extracted tarball per deploy (last 5 kept)
   current -> releases/<sha>
 ```
@@ -14,9 +14,8 @@ The instance (t3.micro) runs only Node, PM2 and cloudflared. Postgres (RDS) and 
 ## One-time server setup (Ubuntu 24.04 x86_64, same as the CI runner)
 
 ```bash
-# user + layout
-sudo useradd --create-home --shell /bin/bash trellala
-sudo mkdir -p /srv/trellala/{releases,shared} && sudo chown -R trellala: /srv/trellala
+# layout (deploy and run as the default `ubuntu` user)
+sudo mkdir -p /srv/trellala/{releases,shared} && sudo chown -R ubuntu: /srv/trellala
 
 # small swap as a safety net on 1 GiB RAM
 sudo fallocate -l 1G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
@@ -26,8 +25,8 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - && sudo apt install -y nodejs
 sudo npm install -g pm2
 
-# PM2 on boot, as the trellala user (resurrects the list saved by each deploy)
-sudo env PATH=$PATH pm2 startup systemd -u trellala --hp /home/trellala
+# PM2 on boot, as ubuntu (resurrects the list saved by each deploy)
+sudo env PATH=$PATH pm2 startup systemd -u ubuntu --hp /home/ubuntu
 ```
 
 Put the real values in `/srv/trellala/shared/.env` (`chmod 600`). `REDIS_URL` and `DATABASE_URL` point
@@ -55,8 +54,8 @@ Environment `production` with these secrets:
 | Secret | Value |
 | --- | --- |
 | `SSH_HOST` | Elastic IP or hostname of the instance |
-| `SSH_USER` | `trellala` |
-| `SSH_PRIVATE_KEY` | private half of a key whose public half is in `~trellala/.ssh/authorized_keys` |
+| `SSH_USER` | `ubuntu` |
+| `SSH_PRIVATE_KEY` | contents of the EC2 key pair `.pem` |
 | `SSH_KNOWN_HOSTS` | `<SSH_HOST> <first two fields of /etc/ssh/ssh_host_ed25519_key.pub>` |
 | `SSH_PORT` | optional, defaults to 22 |
 
