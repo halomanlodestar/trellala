@@ -31,6 +31,11 @@ healthy() {
   return 1
 }
 
+if [ ! -f "$ENV_FILE" ]; then
+  log "missing $ENV_FILE; create it from .env.example (see deploy/README.md)"
+  exit 1
+fi
+
 log "migrating"
 (
   set -a
