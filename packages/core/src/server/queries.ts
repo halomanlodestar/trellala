@@ -19,6 +19,14 @@ import type {
 import { hackathonInclude, num, toMilestone, toPerson, toProgress, userSelect } from "./mappers";
 import { toDetail, toSummary, toTeamViews } from "./views";
 
+/** Has a cash or crypto prize, or an estimated value above zero. */
+const PRIZE_MONEY_WHERE: Prisma.HackathonWhereInput = {
+  OR: [
+    { estimatedUsd: { gt: 0 } },
+    { prizes: { some: { kind: { not: "NON_MONETARY" }, OR: [{ amount: { gt: 0 } }, { estimatedUsd: { gt: 0 } }] } } },
+  ],
+};
+
 function listWhere(f: Partial<HackathonListFilter>, archived: boolean): Prisma.HackathonWhereInput {
   return {
     archivedAt: archived ? { not: null } : null,
@@ -28,6 +36,7 @@ function listWhere(f: Partial<HackathonListFilter>, archived: boolean): Prisma.H
     ...(f.stage ? { stage: f.stage } : {}),
     ...(f.tag ? { tags: { has: f.tag } } : {}),
     ...(f.member ? { teamMembers: { some: { userId: f.member } } } : {}),
+    ...(f.prize ? PRIZE_MONEY_WHERE : {}),
   };
 }
 
@@ -80,19 +89,20 @@ function groupOf(endsAt: Date, now: Date): QueueGroupKey {
 }
 
 /** Overdue items plus the next upcoming item for every live team (or the hackathon, if it has no teams). */
-export async function getActionQueue(opts: { userId?: string; tag?: string }, now = new Date()): Promise<QueueGroup[]> {
+export async function getActionQueue(opts: { userId?: string; tag?: string; prize?: boolean }, now = new Date()): Promise<QueueGroup[]> {
   const rows = await prisma.hackathon.findMany({
     where: {
       archivedAt: null,
       ...(opts.tag ? { tags: { has: opts.tag } } : {}),
       ...(opts.userId ? { teamMembers: { some: { userId: opts.userId } } } : {}),
+      ...(opts.prize ? PRIZE_MONEY_WHERE : {}),
     },
     include: hackathonInclude,
   });
 
   const items: QueueItem[] = [];
   for (const h of rows) {
-    const base = { hackathonId: h.id, hackathonName: h.name, hackathonType: h.type, mode: h.mode, tags: h.tags };
+    const base = { hackathonId: h.id, hackathonName: h.name, hackathonType: h.type, mode: h.mode, tags: h.tags, sourceUrl: h.sourceUrl };
     const eventMilestones = h.milestones.map(toMilestone);
     const teams = toTeamViews(h, now);
 

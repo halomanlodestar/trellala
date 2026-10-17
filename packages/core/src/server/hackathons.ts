@@ -5,7 +5,7 @@ import type { Actor, FieldSources, HackathonFormData, HackathonStage, ManualArch
 import { logActivity, sourceOf } from "./activity";
 import { evaluateArchive } from "./archive";
 
-const USER_ONLY_FIELDS = ["stage", "effortEstimate", "fitScore", "notes"] as const;
+const USER_ONLY_FIELDS = ["stage", "effortEstimate", "fitScore", "notes", "importantLinks"] as const;
 
 function fieldData(data: HackathonFormData) {
   return {
@@ -25,6 +25,7 @@ function fieldData(data: HackathonFormData) {
     fitScore: data.fitScore,
     tags: data.tags,
     notes: data.notes,
+    importantLinks: data.importantLinks,
   };
 }
 

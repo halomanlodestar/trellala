@@ -1,5 +1,6 @@
 import { PRIZE_KIND_LABEL } from "@trellala/core/constants";
 import type { HackathonDetail } from "@trellala/core/types";
+import { ArrowUpRight } from "lucide-react";
 import { formatUsd } from "@/lib/format";
 import { MilestoneTimeline } from "./milestone-timeline";
 import { SectionHead } from "./section-head";
@@ -48,6 +49,21 @@ export function Overview({ hackathon: h, now }: Props) {
             </ul>
           )}
         </section>
+
+        {h.importantLinks.length > 0 && (
+          <section>
+            <SectionHead>Links</SectionHead>
+            <ul className="border-t border-rule">
+              {h.importantLinks.map((l) => (
+                <li key={`${l.label}:${l.url}`} className="border-b py-3 text-sm">
+                  <a href={l.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 underline-offset-4 hover:text-destructive hover:underline">
+                    {l.label} <ArrowUpRight className="size-3" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {details.length > 0 && (
           <section>

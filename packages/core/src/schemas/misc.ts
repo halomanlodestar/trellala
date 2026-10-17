@@ -49,4 +49,8 @@ export const queueFilterSchema = z.object({
     .enum(["true", "false"])
     .optional()
     .transform((v) => v === "true"),
+  prize: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
 });

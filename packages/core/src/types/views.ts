@@ -12,6 +12,10 @@ import type {
   TeamMilestoneState,
   TeamStatus,
 } from "./enums";
+import type { z } from "zod";
+import type { importantLinkSchema } from "../schemas";
+
+export type ImportantLink = z.output<typeof importantLinkSchema>;
 
 export type PersonView = {
   id: string;
@@ -120,6 +124,7 @@ export type HackathonDetail = HackathonSummary & {
   effortEstimate: number | null;
   fitScore: number | null;
   notes: string | null;
+  importantLinks: ImportantLink[];
   source: string | null;
   externalId: string | null;
   fieldSources: Record<string, string>;
@@ -138,6 +143,7 @@ export type QueueItem = {
   hackathonType: HackathonType;
   mode: HackathonMode;
   tags: string[];
+  sourceUrl: string | null;
   teamId: string | null;
   teamName: string | null;
   teamStatus: TeamStatus | null;

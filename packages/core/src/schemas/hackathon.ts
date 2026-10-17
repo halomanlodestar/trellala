@@ -48,6 +48,13 @@ export const prizeFormSchema = z.object({
   estimatedUsd: nullableNumber(0),
 });
 
+export const importantLinkSchema = z.object({
+  label: z.string().trim().min(1).max(80),
+  url: z.url({ protocol: /^https?$/ }).max(2048),
+});
+
+export const importantLinksSchema = z.array(importantLinkSchema).max(30);
+
 export const hackathonFieldsSchema = z.object({
   name: z.string().trim().min(1).max(200),
   description: optionalText(20000),
@@ -64,6 +71,7 @@ export const hackathonFieldsSchema = z.object({
   fitScore: nullableInt(1, 5),
   tags: tagsSchema,
   notes: optionalText(20000),
+  importantLinks: importantLinksSchema,
 });
 
 /** Create and edit share one shape: fields + full milestone and prize lists. */
@@ -103,5 +111,9 @@ export const hackathonListFilterSchema = z.object({
   stage: z.enum(HACKATHON_STAGES).optional(),
   tag: z.string().trim().toLowerCase().max(40).optional(),
   member: idSchema.optional(),
+  prize: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
   sort: z.enum(["deadline", "priority", "prize", "added"]).default("deadline"),
 });

@@ -164,6 +164,8 @@ model Hackathon {
   fitScore       Int? // 1–5, set by hand
   tags           String[] @default([])
   notes          String?  @db.Text
+  // Labelled links set by hand: [{ "label": "PPT template", "url": "https://…" }]
+  importantLinks Json     @default("[]")
 
   // Field-level provenance: { "<fieldPath>": "<source>" }
   // e.g. { "name": "ingest:devfolio", "milestones.final_submission.endsAt": "user:abc" }

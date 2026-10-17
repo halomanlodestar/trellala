@@ -1,6 +1,7 @@
 import type { Prisma } from "@trellala/db";
 import type { Milestone, Prize, TeamMilestone, User } from "@trellala/db";
-import type { MilestoneView, PersonView, PrizeView, ProgressView } from "../types";
+import { importantLinksSchema } from "../schemas";
+import type { ImportantLink, MilestoneView, PersonView, PrizeView, ProgressView } from "../types";
 
 export const num = (d: Prisma.Decimal | null): number | null => (d === null ? null : d.toNumber());
 
@@ -44,6 +45,12 @@ export const toProgress = (p: TeamMilestone): ProgressView => ({
   note: p.note,
   completedAt: p.completedAt,
 });
+
+/** Stored JSON is re-validated; anything malformed reads as no links. */
+export function parseImportantLinks(value: unknown): ImportantLink[] {
+  const r = importantLinksSchema.safeParse(value);
+  return r.success ? r.data : [];
+}
 
 /** "₹50,000 · 2 ETH · Swag" style summary. */
 export function prizeSummary(prizes: PrizeView[]): string | null {

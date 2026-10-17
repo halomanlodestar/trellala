@@ -41,6 +41,7 @@ export function hackathonFormDefaults(h?: HackathonDetail): HackathonFormInput {
       fitScore: null,
       tags: [],
       notes: null,
+      importantLinks: [],
       milestones: templateMilestones("BUILDATHON"),
       prizes: [],
     };
@@ -61,6 +62,7 @@ export function hackathonFormDefaults(h?: HackathonDetail): HackathonFormInput {
     fitScore: h.fitScore,
     tags: h.tags,
     notes: h.notes,
+    importantLinks: h.importantLinks,
     milestones: h.milestones.map((m) => ({
       id: m.id,
       key: m.key,

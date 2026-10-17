@@ -1,6 +1,7 @@
 "use client";
 
 import type { QueueItem } from "@trellala/core/types";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { KindLine } from "@/components/common/badges";
 import { Deadline } from "@/components/common/deadline";
@@ -27,6 +28,18 @@ export function QueueItemCard({ item, tone, onHide, onRestore }: Props) {
           <Link href={`/hackathons/${item.hackathonId}`} className="text-foreground/80 underline-offset-4 hover:text-foreground hover:underline">
             {item.hackathonName}
           </Link>
+          {item.sourceUrl && (
+            <a
+              href={item.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              title="Source"
+              aria-label="Open source"
+              className="-ml-1 text-foreground/60 hover:text-destructive"
+            >
+              <ArrowUpRight className="size-3.5" />
+            </a>
+          )}
           <span aria-hidden>›</span>
           {item.teamId ? (
             <Link href={`/hackathons/${item.hackathonId}/teams/${item.teamId}`} className="underline-offset-4 hover:text-foreground hover:underline">

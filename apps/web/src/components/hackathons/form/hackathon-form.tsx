@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSaveHackathon } from "@/hooks/use-save-hackathon";
 import { applyFieldErrors, numberInput, textInput } from "@/lib/form";
 import { EnumSelect } from "./enum-select";
+import { LinkFields } from "./link-fields";
 import { MilestoneFields } from "./milestone-fields";
 import { PrizeFields } from "./prize-fields";
 
@@ -91,6 +92,7 @@ export function HackathonForm({ hackathonId, defaultValues, tagSuggestions }: Pr
           </FieldGroup>
         </FieldSet>
 
+        <LinkFields />
         <MilestoneFields />
         <PrizeFields />
 

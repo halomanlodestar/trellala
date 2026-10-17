@@ -3,6 +3,7 @@ import { hackathonNextAction, priorityScore, teamNextAction } from "../rules/ran
 import {
   type HackathonWithRelations,
   num,
+  parseImportantLinks,
   prizeSummary,
   toMilestone,
   toPerson,
@@ -89,6 +90,7 @@ export function toDetail(
     effortEstimate: h.effortEstimate,
     fitScore: h.fitScore,
     notes: h.notes,
+    importantLinks: parseImportantLinks(h.importantLinks),
     source: h.source,
     externalId: h.externalId,
     fieldSources: (h.fieldSources ?? {}) as Record<string, string>,
