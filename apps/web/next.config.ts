@@ -1,6 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for EC2 deploys; trace from the monorepo root so workspace packages are included.
+  output: "standalone",
+  outputFileTracingRoot: path.join(import.meta.dirname, "../.."),
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,

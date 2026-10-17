@@ -1,0 +1,99 @@
+# @format
+
+name: CI / Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Never run two deploys at once; a newer push waits for the running one instead of cancelling it mid-switch.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('ci-{0}', github.ref) || 'deploy-production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test
+
+  build:
+    needs: check
+    if: github.event_name != 'pull_request'
+    # Must match the server's OS + CPU (t3 = x86_64, Ubuntu 24.04): native deps (sharp, Prisma engines) are built for the runner.
+    runs-on: ubuntu-24.04
+    env:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Placeholders so env validation passes at build time. Real values live only on the server.
+      DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+      REDIS_URL: redis://127.0.0.1:6379
+      BETTER_AUTH_SECRET: build-placeholder-build-placeholder-000
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      GOOGLE_CLIENT_ID: build-placeholder
+      GOOGLE_CLIENT_SECRET: build-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: next-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bun.lock') }}-
+      - run: bun run build
+      - run: bash deploy/package.sh "${{ github.sha }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: dist/trellala-${{ github.sha }}.tar.gz
+          retention-days: 14
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: production
+    env:
+      TARBALL: trellala-${{ github.sha }}.tar.gz
+      RELEASE: /srv/trellala/releases/${{ github.sha }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host prod
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            Port ${{ secrets.SSH_PORT || '22' }}
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+
+      - name: Upload release
+        run: |
+          ssh prod "mkdir -p $RELEASE"
+          scp "$TARBALL" "prod:/srv/trellala/releases/$TARBALL"
+          ssh prod "tar -xzf /srv/trellala/releases/$TARBALL -C $RELEASE && rm /srv/trellala/releases/$TARBALL"
+
+      - name: Migrate, switch, reload PM2
+        run: ssh prod "bash $RELEASE/remote-deploy.sh"
