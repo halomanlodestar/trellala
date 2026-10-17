@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CommandMenu } from "./command-menu";
 import { IstClock } from "./ist-clock";
-import { MastheadNav } from "./masthead-nav";
+import { MastheadNav, MastheadNavFallback } from "./masthead-nav";
 import { ReviewBanner } from "./review-banner";
 import { UserMenu } from "./user-menu";
 
@@ -14,7 +14,9 @@ export function Masthead() {
         <Link href="/" className="font-serif text-[1.75rem] leading-none tracking-tight italic">
           Trellala
         </Link>
-        <IstClock className="hidden text-muted-foreground md:block" />
+        <Suspense>
+          <IstClock className="hidden text-muted-foreground md:block" />
+        </Suspense>
         <div className="ml-auto flex items-center gap-2">
           <CommandMenu />
           <Suspense fallback={<span className="size-7" />}>
@@ -25,8 +27,12 @@ export function Masthead() {
       <div className="page-frame">
         <div className="h-1 border-y border-rule" />
       </div>
-      <MastheadNav />
-      <ReviewBanner />
+      <Suspense fallback={<MastheadNavFallback />}>
+        <MastheadNav />
+      </Suspense>
+      <Suspense>
+        <ReviewBanner />
+      </Suspense>
     </header>
   );
 }
